@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAGE - AI Study Mate</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f5f3ff;
+ color:#25233b;
+}
+header{
+ background:#7259d9;
+ color:white;
+ padding:22px;
+ text-align:center;
+}
+nav{
+ display:flex;
+ justify-content:center;
+ gap:12px;
+ padding:18px;
+ flex-wrap:wrap;
+}
+button{
+ padding:12px 20px;
+ border:0;
+ border-radius:8px;
+ background:#7259d9;
+ color:white;
+ cursor:pointer;
+}
+button:hover{background:#503bb0}
+.container{
+ max-width:850px;
+ margin:25px auto;
+ padding:20px;
+}
+.card{
+ background:white;
+ padding:25px;
+ border-radius:14px;
+ margin-bottom:20px;
+ box-shadow:0 3px 12px #00000010;
+}
+input,textarea{
+ width:100%;
+ padding:13px;
+ border:1px solid #ccc;
+ border-radius:8px;
+ margin:10px 0;
+ font-size:15px;
+}
+textarea{min-height:180px}
+.output{
+ background:#f0edff;
+ padding:18px;
+ border-radius:10px;
+ margin-top:15px;
+ line-height:1.7;
+ white-space:pre-wrap;
+}
+.hidden{display:none}
+h2{color:#7259d9}
+footer{
+ text-align:center;
+ padding:25px;
+ color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>✦ SAGE: AI STUDY MATE</h1>
+<p>An AI-Powered Learning Assistant</p>
+</header>
+
+<nav>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('tutor')">Study Tutor</button>
+<button onclick="showPage('summary')">Summarize Notes</button>
+</nav>
+
+<div class="container">
+
+<section id="home">
+<div class="card">
+<h2>Welcome to SAGE!</h2>
+<p>Your personal study companion.</p>
+<p>Learn difficult topics through simple explanations
+and convert lengthy notes into concise summaries.</p>
+<button onclick="showPage('tutor')">Start Studying</button>
+<button onclick="showPage('summary')">Summarize Notes</button>
+</div>
+</section>
+
+<section id="tutor" class="hidden">
+<div class="card">
+<h2>AI Study Tutor</h2>
+<p>Enter a topic or question.</p>
+
+<input id="topic" placeholder="Enter your topic">
+
+<button onclick="explainTopic()">Explain Topic</button>
+
+<div id="tutorOutput" class="output">
+Your explanation will appear here.
+</div>
+</div>
+</section>
+
+<section id="summary" class="hidden">
+<div class="card">
+<h2>Notes Summarizer</h2>
+<p>Paste your study material below.</p>
+
+<textarea id="notes"
+placeholder="Paste your notes here..."></textarea>
+
+<button onclick="summarizeNotes()">Summarize</button>
+
+<div id="summaryOutput" class="output">
+Your summary will appear here.
+</div>
+</div>
+</section>
+
+</div>
+
+<footer>
+<p>SAGE AI STUDY MATE | SEC PROJECT</p>
+<p>Review AI-generated content with trusted study materials.</p>
+</footer>
+
+<script>
+
+function showPage(page){
+ document.getElementById("home").classList.add("hidden");
+ document.getElementById("tutor").classList.add("hidden");
+ document.getElementById("summary").classList.add("hidden");
+
+ document.getElementById(page).classList.remove("hidden");
+}
+
+function explainTopic(){
+
+ let topic=document.getElementById("topic").value.trim();
+
+ if(topic===""){
+  alert("Please enter a topic");
+  return;
+ }
+
+ document.getElementById("tutorOutput").innerHTML=
+ `<h3>${escapeHTML(topic)}</h3>
+ <b>1. Introduction</b>
+ <p>${escapeHTML(topic)} is the topic you want to understand.
+ Start by learning its definition, purpose and important concepts.</p>
+
+ <b>2. Step-by-step learning</b>
+ <ol>
+ <li>Understand the basic definition.</li>
+ <li>Identify the main concepts.</li>
+ <li>Study a simple example.</li>
+ <li>Learn its real-world applications.</li>
+ <li>Revise the important points.</li>
+ </ol>
+
+ <b>3. Simple Analogy</b>
+ <p>Think of learning this topic like understanding a machine:
+ first learn its purpose, then its parts, and finally how they work together.</p>
+
+ <b>4. Check Your Understanding</b>
+ <p>Can you explain ${escapeHTML(topic)} in your own words
+ and give one example?</p>`;
+}
+
+function summarizeNotes(){
+
+ let text=document.getElementById("notes").value.trim();
+
+ if(text.length<40){
+  alert("Please enter more study material");
+  return;
+ }
+
+ let sentences=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+
+ let words=text.toLowerCase().match(/[a-z]{4,}/g)||[];
+
+ let frequency={};
+
+ let stop=["this","that","with","from","have","were",
+ "they","them","their","there","then","into","about",
+ "which","while","when","what","your","you","are",
+ "for","the","and","but","not","can","will","was"];
+
+ words.forEach(word=>{
+  if(!stop.includes(word)){
+   frequency[word]=(frequency[word]||0)+1;
+  }
+ });
+
+ let important=Object.keys(frequency)
+ .sort((a,b)=>frequency[b]-frequency[a])
+ .slice(0,8);
+
+ let scored=sentences.map((sentence,index)=>{
+  let count=0;
+  sentence.toLowerCase().split(/\W+/).forEach(word=>{
+   count+=frequency[word]||0;
+  });
+  return {sentence,index,score:count};
+ });
+
+ let selected=scored
+ .sort((a,b)=>b.score-a.score)
+ .slice(0,Math.max(2,Math.ceil(sentences.length*.25)))
+ .sort((a,b)=>a.index-b.index);
+
+ let summary=selected.map(x=>x.sentence).join(" ");
+
+ let questions=important.slice(0,3).map(word=>
+  "What does "+word+" mean in these notes?"
+ );
+
+ document.getElementById("summaryOutput").innerHTML=
+ `<h3>TL;DR Summary</h3>
+ <p>${escapeHTML(summary)}</p>
+
+ <h3>Important Key Terms</h3>
+ <ul>${important.map(w=>"<li>"+escapeHTML(w)+"</li>").join("")}</ul>
+
+ <h3>Self-Check Questions</h3>
+ <ol>${questions.map(q=>"<li>"+escapeHTML(q)+"</li>").join("")}</ol>`;
+}
+
+function escapeHTML(value){
+ return value.replace(/[&<>"']/g, char => ({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;',
+  "'":'&#39;'
+ }[char]));
+}
+
+</script>
+
+</body>
+</html>
